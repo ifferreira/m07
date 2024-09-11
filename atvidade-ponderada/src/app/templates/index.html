@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Previsão de Criptomoedas</title>
+    <script src="https://unpkg.com/htmx.org@1.8.4"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+
+        header {
+            background-color: #007BFF;
+            padding: 15px;
+            text-align: center;
+            color: white;
+        }
+
+        header nav a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 18px;
+        }
+
+        header nav a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        label {
+            font-size: 18px;
+            margin-bottom: 10px;
+            display: block;
+            color: #555;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .result {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #333;
+            padding: 15px;
+            border: 1px solid #007BFF;
+            border-radius: 4px;
+            background-color: #e9f7fe;
+            overflow: auto;  /* Adiciona rolagem se o conteúdo for longo */
+        }
+
+        .result h2 {
+            margin: 0;
+            color: #0056b3;
+        }
+
+        .prediction {
+            margin: 10px 0;
+            font-size: 1.2em;
+            font-weight: bold;
+            white-space: pre-wrap;  /* Garante que as previsões respeitem quebras de linha */
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <nav>
+            <a href="/retreinar_modelo">Retreinar Modelo</a>
+            <a href="/logs">Ver Logs</a>
+            <a href="/">Previsão</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1>Previsão de Criptomoedas</h1>
+        <form hx-post="/predict" hx-target="#result" hx-swap="innerHTML">
+            <label for="days">Insira o número de dias para previsão:</label>
+            <input type="number" id="days" name="days" min="1" max="365" required>
+            <button type="submit">Fazer Previsão</button>
+        </form>
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        // Manipula a resposta do servidor após a troca de conteúdo pelo HTMX
+        document.addEventListener('htmx:afterSwap', (event) => {
+            const resultDiv = document.getElementById('result');
+            const response = event.detail.xhr.response;
+            const jsonResponse = JSON.parse(response);
+
+            // Limpa o conteúdo anterior
+            resultDiv.innerHTML = '';
+
+            // Exibe a decisão
+            const decisionElement = document.createElement('h2');
+            decisionElement.textContent = `Decisão: ${jsonResponse.decision}`;
+            resultDiv.appendChild(decisionElement);
+
+            // Exibe as previsões
+            const predictionsElement = document.createElement('div');
+            predictionsElement.className = 'prediction';
+            predictionsElement.innerHTML = `<strong>Previsões:</strong><br>${jsonResponse.predictions.join('<br>')}`;
+            resultDiv.appendChild(predictionsElement);
+        });
+    </script>
+
+</body>
+</html>

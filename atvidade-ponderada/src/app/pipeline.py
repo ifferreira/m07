@@ -64,6 +64,24 @@ def buy_sell_decision(predictions):
         return f"Compre: o preço está previsto para subir {percentage_change:.2f}%."
     else:
         return f"Venda: o preço está previsto para cair {abs(percentage_change):.2f}%."
+    
+def retrain_model(start_date, end_date):
+    data = fetch_crypto_data('BTC-USD', start_date, end_date)
+    scaler, data_scaled = scale_data(data)
+
+    train_size = int(len(data_scaled) * 0.65)
+    train_data = data_scaled[:train_size]
+
+    time_step = 100
+    X_train, Y_train = create_dataset(train_data, time_step)
+
+    X_train = X_train.reshape(X_train.shape[0], X_train.shape[1], 1)
+
+    model = build_lstm_model(time_step)
+    trained_model = train_lstm_model(model, X_train, Y_train)
+
+    model_save_path = os.path.join(os.path.dirname(__file__), 'new_model.h5')
+    trained_model.save(model_save_path)
 
 def main_pipeline(start_date, end_date):
     data = fetch_crypto_data('BTC-USD', start_date, end_date)

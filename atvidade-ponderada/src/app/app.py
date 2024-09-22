@@ -52,7 +52,7 @@ def retrain():
 	})
 	start_date = request.form['start_date']
 	end_date = request.form['end_date']
-	#retrain_model(start_date, end_date)
+	retrain_model(start_date, end_date)
 	return f"<p>Modelo retreinado com sucesso de {start_date} a {end_date}.</p>"
 
 @app.route('/logs')
@@ -66,6 +66,24 @@ def get_logs():
 	for log in db.all():
 		a += f'{log["date"]} - {log["message"]} <br>'
 	return a
+
+
+@app.route('/predict', methods=['POST'])
+def predict():
+	db.insert({'date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 'route': '/predict', 'message': 'Predição realizada'})
+	days = int(request.form['days'])
+
+	data = fetch_crypto_data('BTC-USD', '2014-09-17', datetime.now().strftime('%Y-%m-%d'))
+	scaler, data_scaled = scale_data(data)
+
+	time_step = 100
+	future_predictions = predict_next_days(lstm_model, data_scaled, time_step, days_to_predict=days)
+	future_predictions_inverse = inverse_scale(scaler, future_predictions)
+	decision = buy_sell_decision(future_predictions_inverse)
+	return jsonify({
+        'predictions': future_predictions_inverse.tolist(),
+        'decision': decision
+    	})
 
 if __name__ == '__main__':
     	app.run(host='localhost', port=8000)
